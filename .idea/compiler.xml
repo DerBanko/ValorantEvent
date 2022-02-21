@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Annotation profile for ValorantEvent" enabled="true">
+        <sourceOutputDir name="../../../Export/Public/ValorantEvent/generated-sources/annotations" />
+        <sourceTestOutputDir name="../../../Export/Public/ValorantEvent/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="ValorantEvent" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="bankocloud" target="11" />
+    </bytecodeTargetLevel>
+  </component>
+</project>
