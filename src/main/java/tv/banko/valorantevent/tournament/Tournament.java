@@ -1,6 +1,7 @@
 package tv.banko.valorantevent.tournament;
 
 import tv.banko.valorantevent.ValorantEvent;
+import tv.banko.valorantevent.tournament.challenge.ChallengeManager;
 import tv.banko.valorantevent.discord.Discord;
 import tv.banko.valorantevent.tournament.match.MatchManager;
 import tv.banko.valorantevent.tournament.player.PlayerManager;
@@ -10,16 +11,13 @@ public class Tournament {
 
     private final ValorantEvent event;
 
-    private final TeamManager team;
-    private final MatchManager match;
-    private final PlayerManager player;
+    private TeamManager team;
+    private MatchManager match;
+    private PlayerManager player;
+    private ChallengeManager challenge;
 
     public Tournament(ValorantEvent event) {
         this.event = event;
-
-        this.team = new TeamManager(event);
-        this.match = new MatchManager(event);
-        this.player = new PlayerManager(event);
     }
 
     public ValorantEvent getEvent() {
@@ -38,7 +36,18 @@ public class Tournament {
         return player;
     }
 
+    public ChallengeManager getChallenge() {
+        return challenge;
+    }
+
     public Discord getDiscord() {
         return event.getDiscord();
+    }
+
+    public void load() {
+        this.team = new TeamManager(event);
+        this.match = new MatchManager(event);
+        this.player = new PlayerManager(event);
+        this.challenge = new ChallengeManager();
     }
 }

@@ -14,7 +14,7 @@ public class MapVote {
     private final Match match;
     private final MapVoteMessage message;
 
-    private final List<Map> maps;
+    private final List<GameMap> gameMaps;
     private Phase phase;
 
     private int team1Number;
@@ -26,7 +26,7 @@ public class MapVote {
         this.match = match;
         this.message = new MapVoteMessage(match);
 
-        this.maps = new ArrayList<>(Arrays.asList(Map.values()));
+        this.gameMaps = new ArrayList<>(Arrays.asList(GameMap.values()));
         this.phase = Phase.HIGHER_RANDOM_NUMBER_WINS;
 
         this.team1Number = -1;
@@ -47,8 +47,8 @@ public class MapVote {
         return phase;
     }
 
-    public List<Map> getMaps() {
-        return maps;
+    public List<GameMap> getMaps() {
+        return gameMaps;
     }
 
     public void setNextPhase() {
@@ -64,7 +64,7 @@ public class MapVote {
             return team1Number;
         }
 
-        int i = ThreadLocalRandom.current().nextInt(100);
+        int i = ThreadLocalRandom.current().nextInt(99) + 1;
 
         if (team2Number == i) {
             if (ThreadLocalRandom.current().nextBoolean()) {
@@ -87,7 +87,7 @@ public class MapVote {
             return team2Number;
         }
 
-        int i = ThreadLocalRandom.current().nextInt(100);
+        int i = ThreadLocalRandom.current().nextInt(99) + 1;
 
         if (team1Number == i) {
             if (ThreadLocalRandom.current().nextBoolean()) {
@@ -117,8 +117,8 @@ public class MapVote {
         this.turn = turn.equals(match.getTeam1()) ? match.getTeam2() : match.getTeam1();
     }
 
-    public void banMaps(Map... maps) {
-        this.maps.removeAll(Arrays.asList(maps));
+    public void banMaps(GameMap... gameMaps) {
+        this.gameMaps.removeAll(Arrays.asList(gameMaps));
     }
 
     public void setSide(Team team, boolean defending) {
@@ -129,12 +129,12 @@ public class MapVote {
         this.match.setDefender(defending ? team : team.equals(match.getTeam1()) ? match.getTeam2() : match.getTeam1());
     }
 
-    public Map getMap() {
-        if (maps.size() != 1) {
+    public GameMap getMap() {
+        if (gameMaps.size() != 1) {
             return null;
         }
 
-        return maps.get(0);
+        return gameMaps.get(0);
     }
 
     public enum Phase {

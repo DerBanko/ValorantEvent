@@ -42,7 +42,7 @@ public class TeamChannel {
 
     public TextChannel getText() {
 
-        Guild guild = discord.getBot().getGuildById(discord.getGuildId());
+        Guild guild = discord.getGuildHelper().getGuild();
 
         if (guild == null) {
             return null;
@@ -57,7 +57,7 @@ public class TeamChannel {
 
     public VoiceChannel getVoice() {
 
-        Guild guild = discord.getBot().getGuildById(discord.getGuildId());
+        Guild guild = discord.getGuildHelper().getGuild();
 
         if (guild == null) {
             return null;
@@ -80,7 +80,7 @@ public class TeamChannel {
 
     private void findCategory() {
 
-        Guild guild = discord.getBot().getGuildById(discord.getGuildId());
+        Guild guild = discord.getGuildHelper().getGuild();
 
         if (guild == null) {
             return;
@@ -105,13 +105,19 @@ public class TeamChannel {
         category.createTextChannel(team.getName())
                 .addPermissionOverride(publicRole, List.of(Permission.MESSAGE_SEND), List.of(Permission.VIEW_CHANNEL))
                 .addRolePermissionOverride(team.getRole().getId(), List.of(Permission.VIEW_CHANNEL), Collections.emptyList())
-                .queue(textChannel -> this.textId = textChannel.getId());
+                .queue(textChannel -> {
+                    this.textId = textChannel.getId();
+                    team.save();
+                });
 
         category.createVoiceChannel(team.getName())
                 .addPermissionOverride(publicRole, List.of(Permission.VOICE_CONNECT), List.of(Permission.VIEW_CHANNEL))
                 .addRolePermissionOverride(team.getRole().getId(), List.of(Permission.VIEW_CHANNEL), Collections.emptyList())
                 .setBitrate(category.getGuild().getMaxBitrate())
-                .queue(voiceChannel -> this.voiceId = voiceChannel.getId());
+                .queue(voiceChannel -> {
+                    this.voiceId = voiceChannel.getId();
+                    team.save();
+                });
     }
 
 }

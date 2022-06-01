@@ -18,8 +18,9 @@ public class CommandManager extends ListenerAdapter {
     }
 
     public void load(Discord discord) {
-        list.add(new LinkCommand(discord));
         list.add(new UpdateRankCommand(discord));
+        list.add(new AdminCommand(discord));
+        list.add(new TeamCommand(discord));
 
         CommandListUpdateAction commands = discord.getBot().updateCommands();
 

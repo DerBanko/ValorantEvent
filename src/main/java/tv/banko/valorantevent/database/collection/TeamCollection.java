@@ -8,8 +8,6 @@ import tv.banko.valorantevent.tournament.team.Team;
 import tv.banko.valorantevent.tournament.team.TeamManager;
 import tv.banko.valorantevent.util.GameId;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public record TeamCollection(Database database) {
@@ -17,7 +15,7 @@ public record TeamCollection(Database database) {
     public CompletableFuture<Team> getTeam(GameId gameId) {
         CompletableFuture<Team> future = new CompletableFuture<>();
         getCollection().find(Filters.eq("id", gameId.toString())).first((document, throwable) -> {
-            if (throwable == null) {
+            if (throwable != null || document == null) {
                 future.complete(null);
                 return;
             }
@@ -31,6 +29,10 @@ public record TeamCollection(Database database) {
         getCollection().find().forEach(document -> {
             manager.addTeam(new Team(database.getEvent(), document));
         }, (unused, throwable) -> {
+            if (throwable == null) {
+                return;
+            }
+            throwable.printStackTrace();
         });
     }
 

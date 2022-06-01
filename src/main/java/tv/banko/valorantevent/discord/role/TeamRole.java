@@ -28,7 +28,7 @@ public class TeamRole {
     }
 
     public void setRole(String userId) {
-        Guild guild = discord.getBot().getGuildById(discord.getGuildId());
+        Guild guild = discord.getGuildHelper().getGuild();
 
         if (guild == null) {
             return;
@@ -49,7 +49,7 @@ public class TeamRole {
     }
 
     public void removeRole(String userId) {
-        Guild guild = discord.getBot().getGuildById(discord.getGuildId());
+        Guild guild = discord.getGuildHelper().getGuild();
 
         if (guild == null) {
             return;
@@ -77,9 +77,29 @@ public class TeamRole {
         return Long.parseLong(roleId);
     }
 
+    public void editRoleName(String name) {
+        Guild guild = discord.getGuildHelper().getGuild();
+
+        if (guild == null) {
+            return;
+        }
+
+        if (roleId == null) {
+            return;
+        }
+
+        Role role = guild.getRoleById(roleId);
+
+        if(role == null) {
+            return;
+        }
+
+        role.getManager().setName(name).queue();
+    }
+
     private void createRole() {
 
-        Guild guild = discord.getBot().getGuildById(discord.getGuildId());
+        Guild guild = discord.getGuildHelper().getGuild();
 
         if (guild == null) {
             return;
@@ -90,12 +110,14 @@ public class TeamRole {
         if (role == null) {
             guild.createRole().setName(team.getName()).setColor(Color.decode("#292B2F")).queue(newRole -> {
                 this.roleId = newRole.getId();
+                team.save();
                 team.getPlayers().forEach(this::setRole);
             });
             return;
         }
 
         this.roleId = role.getId();
+        team.save();
         team.getPlayers().forEach(this::setRole);
     }
 

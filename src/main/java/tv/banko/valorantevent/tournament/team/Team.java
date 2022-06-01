@@ -18,6 +18,7 @@ public class Team {
     private final GameId id;
 
     private final Collection<String> players;
+    private final Collection<String> invitations;
     private final TeamRole role;
     private final TeamChannel channel;
 
@@ -35,10 +36,12 @@ public class Team {
         this.name = "Team-" + id;
 
         this.players = new ArrayList<>();
+        this.invitations = new ArrayList<>();
         this.role = new TeamRole(event.getDiscord(), this);
         this.channel = new TeamChannel(event.getDiscord(), this);
 
         calculateTeamRank();
+        save();
     }
 
     public Team(ValorantEvent event, Document document) {
@@ -49,7 +52,8 @@ public class Team {
 
         this.name = document.getString("name");
 
-        this.players = new ArrayList<>(Arrays.asList(document.getString("id").split(",")));
+        this.players = new ArrayList<>(Arrays.asList(document.getString("players").split(",")));
+        this.invitations = new ArrayList<>(Arrays.asList(document.getString("invitations").split(",")));
         this.role = new TeamRole(event.getDiscord(), this, document.getString("roleId"));
         this.channel = new TeamChannel(event.getDiscord(), this, document.getString("textId"),
                 document.getString("voiceId"));
@@ -76,15 +80,36 @@ public class Team {
 
         players.add(id);
         role.setRole(id);
+        calculateTeamRank();
+        save();
     }
 
     public void removePlayer(String id) {
         players.remove(id);
         role.removeRole(id);
+        calculateTeamRank();
+        save();
     }
 
     public boolean isPlayer(String id) {
         return players.contains(id);
+    }
+
+    public void addInvite(String id) {
+        if (invitations.contains(id)) {
+            return;
+        }
+        invitations.add(id);
+        save();
+    }
+
+    public void removeInvite(String id) {
+        invitations.remove(id);
+        save();
+    }
+
+    public boolean isInvited(String id) {
+        return invitations.contains(id);
     }
 
     public Rank getTeamRank() {
@@ -97,6 +122,7 @@ public class Team {
 
     public void setCaptain(String captain) {
         this.captain = captain;
+        save();
     }
 
     public String getName() {
@@ -105,13 +131,17 @@ public class Team {
 
     public void setName(String name) {
         this.name = name;
+        channel.getText().getManager().setName(name).queue();
+        channel.getVoice().getManager().setName(name).queue();
+        role.editRoleName(name);
+        save();
     }
 
     public void save() {
         event.getDatabase().getTeam().setTeam(this);
     }
 
-    public CompletableFuture<Rank> calculateTeamRank() {
+    public void calculateTeamRank() {
         CompletableFuture<Rank> future = new CompletableFuture<>();
 
         List<Player> list = new ArrayList<>();
@@ -165,7 +195,6 @@ public class Team {
             });
         }
 
-        return future;
     }
 
     public Document toDocument() {
@@ -180,10 +209,22 @@ public class Team {
             players.append(player);
         }
 
+        StringBuilder invitations = new StringBuilder();
+
+        for (String invitation : this.invitations) {
+
+            if (!invitations.isEmpty()) {
+                invitations.append(",");
+            }
+
+            invitations.append(invitation);
+        }
+
         return new Document()
                 .append("id", id.toString())
                 .append("name", name)
-                .append("players", players)
+                .append("players", players.toString())
+                .append("invitations", invitations.toString())
                 .append("captain", captain)
                 .append("roleId", role == null ? null : role.getRoleId())
                 .append("voiceId", channel == null ? null : channel.getVoiceId())

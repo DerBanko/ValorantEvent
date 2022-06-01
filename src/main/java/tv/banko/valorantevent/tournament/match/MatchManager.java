@@ -7,6 +7,7 @@ import tv.banko.valorantevent.util.GameId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,7 +50,13 @@ public class MatchManager {
 
     @Nullable
     public Match getMatchByChannelId(String channelId) {
-        return list.stream().filter(match -> match.getChannel().getChannelId().equalsIgnoreCase(channelId))
+        return list.stream().filter(match -> Objects.equals(match.getChannel().getChannelId(), channelId))
+                .findFirst().orElse(null);
+    }
+
+    @Nullable
+    public Match getMatchByCommitteeId(String channelId) {
+        return list.stream().filter(match -> Objects.equals(match.getCommittee().getChannelId(), channelId))
                 .findFirst().orElse(null);
     }
 

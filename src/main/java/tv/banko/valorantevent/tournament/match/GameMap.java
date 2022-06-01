@@ -1,6 +1,6 @@
 package tv.banko.valorantevent.tournament.match;
 
-public enum Map {
+public enum GameMap {
 
     FRACTURE("Fracture", "A", "B"),
     BREEZE("Breeze", "A", "B"),
@@ -13,7 +13,7 @@ public enum Map {
     private final String name;
     private final String[] spots;
 
-    Map(String name, String... spots) {
+    GameMap(String name, String... spots) {
         this.name = name;
         this.spots = spots;
     }

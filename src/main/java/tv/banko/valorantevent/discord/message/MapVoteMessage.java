@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.entities.Emoji;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.selections.SelectMenu;
-import tv.banko.valorantevent.tournament.match.Map;
+import tv.banko.valorantevent.tournament.match.GameMap;
 import tv.banko.valorantevent.tournament.match.MapVote;
 import tv.banko.valorantevent.tournament.match.Match;
 import tv.banko.valorantevent.tournament.team.Team;
@@ -33,7 +33,7 @@ public record MapVoteMessage(Match match) {
         Team team = match.getMapVote().getNumberWinner();
         match.getChannel().getChannel()
                 .sendMessage(new MessageBuilder()
-                        .setContent("<@" + match.getTeam1().getCaptain() + "> <@" + match.getTeam2().getCaptain() + ">")
+                        .setContent("<@" + team.getCaptain() + ">")
                         .setEmbeds(new EmbedBuilder()
                                 .setTitle(":crown: | Start auswählen")
                                 .setDescription("**Zufallszahlen**: " +
@@ -58,8 +58,8 @@ public record MapVoteMessage(Match match) {
                 .setPlaceholder("Wähle **2 Maps**, welche Du bannen möchtest")
                 .setRequiredRange(2, 2);
 
-        for (Map map : vote.getMaps()) {
-            builder.addOption(map.getName(), map.name());
+        for (GameMap gameMap : vote.getMaps()) {
+            builder.addOption(gameMap.getName(), gameMap.name());
         }
 
         match.getChannel().getChannel()
@@ -83,8 +83,8 @@ public record MapVoteMessage(Match match) {
                 .setPlaceholder("Wähle **2 Maps**, welche Du bannen möchtest")
                 .setRequiredRange(2, 2);
 
-        for (Map map : vote.getMaps()) {
-            builder.addOption(map.getName(), map.name());
+        for (GameMap gameMap : vote.getMaps()) {
+            builder.addOption(gameMap.getName(), gameMap.name());
         }
 
         match.getChannel().getChannel()
@@ -108,8 +108,8 @@ public record MapVoteMessage(Match match) {
                 .setPlaceholder("Wähle **die Map**, die gespielt werden soll")
                 .setRequiredRange(1, 1);
 
-        for (Map map : vote.getMaps()) {
-            builder.addOption(map.getName(), map.name());
+        for (GameMap gameMap : vote.getMaps()) {
+            builder.addOption(gameMap.getName(), gameMap.name());
         }
 
         match.getChannel().getChannel()
@@ -151,7 +151,7 @@ public record MapVoteMessage(Match match) {
     public void result() {
         match.getChannel().getChannel()
                 .sendMessage(new MessageBuilder()
-                        .setContent("<@" + match.getTeam1().getCaptain() + "> <@" + match.getTeam2().getCaptain() + ">")
+                        .setContent("<@&" + match.getTeam1().getRole().getRoleId() + "> <@&" + match.getTeam2().getRole().getRoleId() + ">")
                         .setEmbeds(new EmbedBuilder()
                                 .setTitle(":postal_horn: | Information")
                                 .setDescription("> Map: **" + match.getMap().getName() + "**" +

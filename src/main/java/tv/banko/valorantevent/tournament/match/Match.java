@@ -1,31 +1,38 @@
 package tv.banko.valorantevent.tournament.match;
 
 import org.bson.Document;
+import tv.banko.valorantevent.discord.channel.CommitteeChannel;
 import tv.banko.valorantevent.discord.channel.MatchChannel;
 import tv.banko.valorantevent.tournament.Tournament;
+import tv.banko.valorantevent.tournament.challenge.Challenges;
 import tv.banko.valorantevent.tournament.team.Team;
 import tv.banko.valorantevent.util.GameId;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Match {
 
     private final Tournament tournament;
     private final GameId id;
     private final MatchChannel channel;
+    private final CommitteeChannel committee;
 
     private final Team team1;
     private final Team team2;
 
     private final MapVote mapVote;
 
-    private int team1Wins;
-    private int team1Points;
+    private final MatchPoints team1Points;
+    private final MatchPoints team2Points;
 
-    private int team2Wins;
-    private int team2Points;
+    private final List<Challenges.Round> challenges;
 
-    private Map map;
+    private GameMap gameMap;
     private Team defender;
     private int rounds;
+
+    private boolean finished;
 
     public Match(Tournament tournament, GameId id, Team team1, Team team2) {
         this.tournament = tournament;
@@ -36,17 +43,18 @@ public class Match {
 
         this.mapVote = new MapVote(this);
 
-        this.team1Wins = 0;
-        this.team1Points = 0;
+        this.team1Points = new MatchPoints();
+        this.team2Points = new MatchPoints();
 
-        this.team2Wins = 0;
-        this.team2Points = 0;
+        this.challenges = tournament.getChallenge().getRoundChallenges();
 
-        this.map = null;
+        this.gameMap = null;
         this.defender = null;
         this.rounds = 1;
+        this.finished = false;
 
         this.channel = new MatchChannel(tournament.getDiscord(), this);
+        this.committee = new CommitteeChannel(tournament.getDiscord(), this);
     }
 
     public Match(Tournament tournament, Document document) {
@@ -54,22 +62,27 @@ public class Match {
 
         this.id = GameId.of(document.getString("id"));
         this.channel = new MatchChannel(tournament.getDiscord(), this, document.getString("channelId"));
+        this.committee = new CommitteeChannel(tournament.getDiscord(), this, document.getString("committeeId"));
 
         this.team1 = tournament.getTeam().getTeamById(document.getString("team1Id"));
         this.team2 = tournament.getTeam().getTeamById(document.getString("team2Id"));
 
         this.mapVote = new MapVote(this);
 
-        this.team1Wins = document.getInteger("team1Wins");
-        this.team1Points = document.getInteger("team1Points");
+        this.team1Points = new MatchPoints(document.getString("team1Challenges"), document.getString("team1Wins"));
+        this.team2Points = new MatchPoints(document.getString("team2Challenges"), document.getString("team2Wins"));
 
-        this.team2Wins = document.getInteger("team2Wins");
-        this.team2Points = document.getInteger("team2Points");
+        this.challenges = new ArrayList<>();
 
-        this.map = document.getString("map") == null ? null : Map.valueOf(document.getString("map"));
+        for (String s : document.getString("challenges").split(", ")) {
+            this.challenges.add(Challenges.Round.valueOf(s));
+        }
+
+        this.gameMap = document.getString("map") == null ? null : GameMap.valueOf(document.getString("map"));
         this.defender = document.getString("defender") == null ? null : tournament.getTeam()
                 .getTeamById(document.getString("defender"));
         this.rounds = document.getInteger("rounds");
+        this.finished = document.getBoolean("finished");
 
     }
 
@@ -85,6 +98,10 @@ public class Match {
         return channel;
     }
 
+    public CommitteeChannel getCommittee() {
+        return committee;
+    }
+
     public MapVote getMapVote() {
         return mapVote;
     }
@@ -97,54 +114,28 @@ public class Match {
         return team2;
     }
 
-    public int getTeam1Wins() {
-        return team1Wins;
-    }
-
-    public void addTeam1Win() {
-        this.team1Wins++;
-        addTeam1Point();
-    }
-
-    public int getTeam1Points() {
+    public MatchPoints getTeam1Points() {
         return team1Points;
     }
 
-    public void addTeam1Point() {
-        this.team1Points++;
-    }
-
-    public void removeTeam1Point() {
-        this.team1Points--;
-    }
-
-    public int getTeam2Wins() {
-        return team2Wins;
-    }
-
-    public void addTeam2Win() {
-        this.team2Wins++;
-        addTeam2Point();
-    }
-
-    public int getTeam2Points() {
+    public MatchPoints getTeam2Points() {
         return team2Points;
     }
 
-    public void addTeam2Point() {
-        this.team2Points++;
+    public Challenges.Round getRoundChallenge(int round) {
+        if (challenges.size() <= (round - 1)) {
+            return null;
+        }
+
+        return challenges.get(round - 1);
     }
 
-    public void removeTeam2Point() {
-        this.team2Points--;
+    public GameMap getMap() {
+        return gameMap;
     }
 
-    public Map getMap() {
-        return map;
-    }
-
-    public void setMap(Map map) {
-        this.map = map;
+    public void setMap(GameMap gameMap) {
+        this.gameMap = gameMap;
     }
 
     public Team getDefender() {
@@ -173,20 +164,94 @@ public class Match {
         switch (this.rounds) {
             case 13, 27 -> changeDefender();
         }
+
+        int end = checkForEnd();
+
+        if (end == 0) {
+            return;
+        }
+
+        this.finished = true;
+
+        channel.sendMatchEnd(end);
+        committee.getMessage().deleteMatch();
+    }
+
+    public boolean isFinished() {
+        return finished;
     }
 
     public Document toDocument() {
         return new Document()
                 .append("id", id.toString())
                 .append("channelId", channel == null ? null : channel.getChannelId())
+                .append("committeeId", committee == null ? null : committee.getChannelId())
                 .append("team1Id", team1.getId().toString())
                 .append("team2Id", team2.getId().toString())
-                .append("team1Wins", team1Wins)
-                .append("team2Wins", team2Wins)
-                .append("team1Points", team1Points)
-                .append("team2Points", team2Points)
-                .append("map", map == null ? null : map.name())
+                .append("team1Wins", team1Points.getWinsAsString())
+                .append("team2Wins", team2Points.getWinsAsString())
+                .append("team1Challenges", team1Points.getChallengesAsString())
+                .append("team2Challenges", getChallengesAsString())
+                .append("challenges", team2Points.getChallengesAsString())
+                .append("map", gameMap == null ? null : gameMap.name())
                 .append("defender", defender == null ? null : defender.getId().toString())
-                .append("rounds", rounds);
+                .append("rounds", rounds)
+                .append("finished", finished);
+    }
+
+    private String getChallengesAsString() {
+        StringBuilder builder = new StringBuilder();
+
+        for (Challenges.Round challenge : challenges) {
+            if (!builder.isEmpty()) {
+                builder.append(", ");
+            }
+
+            builder.append(challenge.name());
+        }
+
+        return builder.toString();
+    }
+
+    private int checkForEnd() {
+        int wins1 = getTeam1Points().getWins();
+        int wins2 = getTeam2Points().getWins();
+
+        int points1 = getTeam1Points().getPoints();
+        int points2 = getTeam1Points().getPoints();
+
+        if (rounds <= 24) {
+            return checkForEnd0(13, wins1, wins2, points1, points2);
+        }
+
+        if (rounds <= 26) {
+            return checkForEnd0(15, wins1, wins2, points1, points2);
+        }
+
+        if (rounds <= 28) {
+            return checkForEnd0(17, wins1, wins2, points1, points2);
+        }
+
+        if (rounds <= 30) {
+            return checkForEnd0(19, wins1, wins2, points1, points2);
+        }
+
+        return -1;
+    }
+
+    private int checkForEnd0(int requiredWins, int wins1, int wins2, int points1, int points2) {
+        if (wins1 == requiredWins || wins2 == requiredWins) {
+            if (points1 > points2) {
+                return 1;
+            }
+
+            if (points2 > points1) {
+                return 2;
+            }
+
+            return wins1 == requiredWins ? 1 : 2;
+        }
+
+        return 0;
     }
 }

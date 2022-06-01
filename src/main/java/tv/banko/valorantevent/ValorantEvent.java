@@ -23,6 +23,8 @@ public class ValorantEvent {
         try {
             this.discord = new Discord(this);
             this.tournament = new Tournament(this);
+
+            this.tournament.load();
         } catch (LoginException | InterruptedException e) {
             e.printStackTrace();
         }

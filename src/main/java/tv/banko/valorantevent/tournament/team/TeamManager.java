@@ -51,12 +51,20 @@ public class TeamManager {
         return list.stream().filter(team -> team.isPlayer(member.getId())).findFirst().orElse(null);
     }
 
+    public List<Team> getTeamsByInvite(Member member) {
+        return list.stream().filter(team -> team.isInvited(member.getId())).toList();
+    }
+
     @Nullable
     public Team getTeamByPlayer(String id) {
         return list.stream().filter(team -> team.isPlayer(id)).findFirst().orElse(null);
     }
 
     public void addTeam(Team team) {
+        if (list.contains(team)) {
+            return;
+        }
+
         list.add(team);
     }
 

@@ -50,7 +50,7 @@ public class Player {
             return;
         }
 
-        Guild guild = discord.getBot().getGuildById(discord.getGuildId());
+        Guild guild = discord.getGuildHelper().getGuild();
 
         if (guild == null) {
             this.rank = rank;

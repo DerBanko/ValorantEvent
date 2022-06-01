@@ -43,6 +43,7 @@ public class RankAPI {
 
                 if (response.code() != 200) {
                     future.completeAsync(() -> new RankAPIResponse(response.code(), null));
+                    response.close();
                     return;
                 }
 
@@ -50,6 +51,7 @@ public class RankAPI {
 
                 if (body == null) {
                     future.completeAsync(() -> new RankAPIResponse(404, null));
+                    response.close();
                     return;
                 }
 
@@ -57,6 +59,7 @@ public class RankAPI {
 
                 if(json.getInt("status") != 200) {
                     future.completeAsync(() -> new RankAPIResponse(json.getInt("status"), null));
+                    response.close();
                     return;
                 }
 
@@ -65,6 +68,8 @@ public class RankAPI {
                 Rank rank = Rank.byId(data.getInt("currenttier"));
 
                 future.completeAsync(() -> new RankAPIResponse(200, rank));
+
+                response.close();
             } catch (IOException e) {
                 e.printStackTrace();
                 future.completeAsync(() -> new RankAPIResponse(999, null));
