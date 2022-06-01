@@ -3,6 +3,7 @@ package tv.banko.valorantevent.discord.listener;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.SelectMenuInteractionEvent;
@@ -53,10 +54,7 @@ public record InteractionListeners(ValorantEvent event) implements EventListener
                 case "committee" -> buttonCommittee(event);
                 case "match" -> buttonMatch(event);
             }
-
-            return;
         }
-
     }
 
     private void selectMapVote(SelectMenuInteractionEvent event) {
@@ -412,9 +410,7 @@ public record InteractionListeners(ValorantEvent event) implements EventListener
 
                 vote.setNextPhase();
 
-                event.getMessage().delete().queue(unused -> {
-                    vote.getMessage().winnerChooses();
-                });
+                event.getMessage().delete().queue(unused -> vote.getMessage().winnerChooses());
             }
             case "map_pick" -> {
                 if (!Objects.equals(vote.getPhase(), MapVote.Phase.WINNER_CHOOSES)) {
@@ -431,9 +427,7 @@ public record InteractionListeners(ValorantEvent event) implements EventListener
 
                 vote.setNextPhase();
 
-                event.getMessage().delete().queue(unused -> {
-                    vote.getMessage().firstTwoBans();
-                });
+                event.getMessage().delete().queue(unused -> vote.getMessage().firstTwoBans());
 
                 event.replyEmbeds(new EmbedBuilder()
                         .setTitle("<:check:950493473436487760> | Map auswählen")
@@ -559,9 +553,9 @@ public record InteractionListeners(ValorantEvent event) implements EventListener
 
                                 GuildHelper helper = this.event.getDiscord().getGuildHelper();
 
-                                member.getGuild().addRoleToMember(member.getId(), helper.getTeamSplitterRole())
-                                        .and(member.getGuild().addRoleToMember(member.getId(), helper.getRankSplitterRole()))
-                                        .and(member.getGuild().addRoleToMember(member.getId(), helper.getVerifiedRole())).queue();
+                                member.getGuild().addRoleToMember(User.fromId(member.getId()), helper.getTeamSplitterRole())
+                                        .and(member.getGuild().addRoleToMember(User.fromId(member.getId()), helper.getRankSplitterRole()))
+                                        .and(member.getGuild().addRoleToMember(User.fromId(member.getId()), helper.getVerifiedRole())).queue();
 
                                 interactionHook.editOriginalEmbeds(new EmbedBuilder()
                                         .setAuthor(member.getUser().getName(), null, member.getEffectiveAvatarUrl())
